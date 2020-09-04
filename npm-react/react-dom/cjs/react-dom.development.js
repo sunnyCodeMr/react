@@ -23582,7 +23582,7 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.type = null;
   this.stateNode = null; // Fiber
 
-  this.return = null;
+  this.return = null; //return,child,sibling将dom结构以链表的形式串联起来，在任务调度过程中，一旦中断了，可以再找到下一个要执行的任务节点
   this.child = null;
   this.sibling = null;
   this.index = 0;
@@ -23594,8 +23594,8 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.dependencies = null;
   this.mode = mode; // Effects
 
-  this.effectTag = NoEffect;
-  this.nextEffect = null;
+  this.effectTag = NoEffect; //通过这几个effect属性处理更新链表
+  this.nextEffect = null; 
   this.firstEffect = null;
   this.lastEffect = null;
   this.expirationTime = NoWork;
@@ -23660,7 +23660,7 @@ function FiberNode(tag, pendingProps, key, mode) {
 //    compatible.
 
 
-var createFiber = function (tag, pendingProps, key, mode) {
+var createFiber = function (tag, pendingProps, key, mode) { //初始化时mode为0，即LegacyRoot 
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 };
@@ -23862,7 +23862,7 @@ function createHostRootFiber(tag) {
     mode |= ProfileMode;
   }
 
-  return createFiber(HostRoot, null, null, mode);
+  return createFiber(HostRoot, null, null, mode); //root节点为宿主节点，这里直接传入HostRoot
 }
 function createFiberFromTypeAndProps(type, // React$ElementType
 key, pendingProps, owner, mode, expirationTime) {
@@ -24123,10 +24123,10 @@ function assignFiberPropertiesInDEV(target, source) {
 function FiberRootNode(containerInfo, tag, hydrate) { //root节点对应的fiber对象
   this.tag = tag;
   this.current = null;
-  this.containerInfo = containerInfo;
+  this.containerInfo = containerInfo; //存放着root节点对应的dom信息
   this.pendingChildren = null;
   this.pingCache = null;
-  this.finishedExpirationTime = NoWork;
+  this.finishedExpirationTime = NoWork; //不需要更新
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
   this.context = null;
@@ -24149,13 +24149,13 @@ function FiberRootNode(containerInfo, tag, hydrate) { //root节点对应的fiber
 }
 
 function createFiberRoot(containerInfo, tag, hydrate, hydrationCallbacks) {
-  var root = new FiberRootNode(containerInfo, tag, hydrate);
+  var root = new FiberRootNode(containerInfo, tag, hydrate); //这里得到的fiberRoot节点包含了部分必要的fiber信息，已经root节点的dom信息
   // stateNode is any.
 
 
-  var uninitializedFiber = createHostRootFiber(tag);
+  var uninitializedFiber = createHostRootFiber(tag); //初始化rootFiber
   root.current = uninitializedFiber;  //root节点对应的fiber对象的current指向一个初始化的fiber对象
-  uninitializedFiber.stateNode = root;
+  uninitializedFiber.stateNode = root; 
   initializeUpdateQueue(uninitializedFiber);
   return root;
 }
@@ -24689,7 +24689,7 @@ function shouldHydrateDueToLegacyHeuristic(container) {
 }
 
 function legacyCreateRootFromDOMContainer(container, forceHydrate) {
-  var shouldHydrate = forceHydrate || shouldHydrateDueToLegacyHeuristic(container); // First clear any existing content.
+  var shouldHydrate = forceHydrate || shouldHydrateDueToLegacyHeuristic(container); // First clear any existing content.Hydrate都是ssr相关的内容
 
   if (!shouldHydrate) {
     var warned = false;
