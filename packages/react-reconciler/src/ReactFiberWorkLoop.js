@@ -2665,7 +2665,7 @@ function checkForInterruption(
 ) {
   if (
     enableUserTimingAPI &&
-    workInProgressRoot !== null &&
+    workInProgressRoot !== null && //workInProgressRoot !== null 表示不是初次渲染
     updateExpirationTime > renderExpirationTime
   ) {
     interruptedBy = fiberThatReceivedUpdate;
