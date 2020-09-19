@@ -1,0 +1,27 @@
+处理更新队列的阶段processUpdateQueue是在beginWork进入到update某个具体节点时进行的
+
+render阶段beginWork进入到update某个具体节点时会调用生命周期方法“componentWillReceiveProps”
+
+在beginWork进行到processUpdateQueue时，若发现当前的setState有callback的话，会将该callback加入到workInProgress.updateQueue的effect属性上，等待被执行
+
+在beginWork进行到updateClassInstance时，会执行生命周期方法“getDerivedStateFromProps”，并将最新的props和最新的state传递过去
+
+在beginWork进行到updateClassInstance时，要对是否更新进行检测“checkShouldComponentUpdate”，此时会执行生命周期方法“shouldComponentUpdate”，并将newProps, newState, nextContext传递过去
+
+当“checkShouldComponentUpdate”的结果为true（默认都返回true）时，会调用生命周期方法“componentWillUpdate”，并传入“newProps, newState, nextContext”
+
+在beginWork进行到finishClassComponent时，此时类实例已经得到最新的state和props了。就会执行生命周期方法“render”，取到该类组件的子节点
+
+reconcileChildren其实就是用来结合新的props来给各个节点创建当前更新的workInprogress，并标志各个节点的effectTag，包括删除的。。。，并建立新的兄弟节点关系
+
+
+completeUnitOfWork 
+1）、更新父节点的effect list，并返回改节点的下一个兄弟节点，否则就返回该节点的父节点的兄弟节点，直至root节点。
+2）、如果发现上次任务执行到一半被中断的话，会将已更新的节点一个个回退回上一个状态。
+3）、更新该节点的所有子节点的childExpirationTime
+
+completeWork 初次渲染时，会创建节点的实例（stateNode），原生组件则为dom实例，类组件则为类实例。后续的若有更新的话，则是给workInProgress.effectTag添加update标志，但是不对stateNode进行操作
+
+
+
+【fiber】memoizedProps，是在节点beginWork之后，进入到completeUnitOfWork之前被更新的。unitOfWork.memoizedProps = unitOfWork.pendingProps;

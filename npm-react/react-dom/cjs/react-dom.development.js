@@ -2565,12 +2565,12 @@ var setTextContent = function (node, text) {
     var firstChild = node.firstChild;
 
     if (firstChild && firstChild === node.lastChild && firstChild.nodeType === TEXT_NODE) {
-      firstChild.nodeValue = text;
+      firstChild.nodeValue = text; //只有一个节点，且为文本节点，通过nodeValue设置值
       return;
     }
   }
 
-  node.textContent = text;
+  node.textContent = text; //否则把整个node节点下的文本覆盖为该更新的文本
 };
 
 // Do not use the below two methods directly!
@@ -6237,16 +6237,16 @@ function diffProperties(domElement, tag, lastRawProps, nextRawProps, rootContain
 
   return updatePayload;
 } // Apply the diff.
-
+//instance, updatePayload, type, oldProps, newProps
 function updateProperties(domElement, updatePayload, tag, lastRawProps, nextRawProps) {
   // Update checked *before* name.
   // In the middle of an update, it is possible to have multiple checked.
   // When a checked radio tries to change name, browser makes another radio's checked false.
   if (tag === 'input' && nextRawProps.type === 'radio' && nextRawProps.name != null) {
-    updateChecked(domElement, nextRawProps);
+    updateChecked(domElement, nextRawProps);//对于radio要进行特殊处理
   }
 
-  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
+  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps); //判断是不是一些svg元素，要进行特殊处理
   var isCustomComponentTag = isCustomComponent(tag, nextRawProps); // Apply the diff.
 
   updateDOMProperties(domElement, updatePayload, wasCustomComponentTag, isCustomComponentTag); // TODO: Ensure that an update gets scheduled if any of the special props
@@ -7544,7 +7544,7 @@ function commitMount(domElement, type, newProps, internalInstanceHandle) {
   if (shouldAutoFocusHostComponent(type, newProps)) {
     domElement.focus();
   }
-}
+}//instance, updatePayload, type, oldProps, newProps
 function commitUpdate(domElement, updatePayload, type, oldProps, newProps, internalInstanceHandle) {
   // Update the props handle so that we know which props are the ones with
   // with current event handlers.
@@ -9561,25 +9561,25 @@ var hasOwnProperty$2 = Object.prototype.hasOwnProperty;
  */
 
 function shallowEqual(objA, objB) {
-  if (objectIs(objA, objB)) {
+  if (objectIs(objA, objB)) { //处理一些特殊值的比较。如NaN与NaN，0与-0
     return true;
   }
 
   if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
-    return false;
+    return false; //非对象及为null时都返回false
   }
 
   var keysA = Object.keys(objA);
   var keysB = Object.keys(objB);
 
   if (keysA.length !== keysB.length) {
-    return false;
+    return false; //简单地对比对象属性的数量
   } // Test for A's keys different from B.
 
 
   for (var i = 0; i < keysA.length; i++) {
     if (!hasOwnProperty$2.call(objB, keysA[i]) || !objectIs(objA[keysA[i]], objB[keysA[i]])) {
-      return false;
+      return false; //a,b属性个数相同，但属性的名称不同时也返回false
     }
   }
 
@@ -11048,7 +11048,7 @@ function scheduleSyncCallback(callback) {
   if (syncQueue === null) {
     syncQueue = [callback]; // Flush the queue in the next tick, at the earliest.
 
-    immediateQueueCallbackNode = Scheduler_scheduleCallback(Scheduler_ImmediatePriority, flushSyncCallbackQueueImpl);
+    immediateQueueCallbackNode = Scheduler_scheduleCallback(Scheduler_ImmediatePriority, flushSyncCallbackQueueImpl); //得到当前要调度的任务,这是taskQueue弹出的任务
   } else {
     // Push onto existing queue. Don't need to schedule a callback because
     // we already scheduled one when we created the queue.
@@ -11072,7 +11072,7 @@ function flushSyncCallbackQueue() {
   flushSyncCallbackQueueImpl();
 }
 
-function flushSyncCallbackQueueImpl() {
+function flushSyncCallbackQueueImpl() {//任务对象中的callback
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
@@ -11086,7 +11086,7 @@ function flushSyncCallbackQueueImpl() {
           var callback = queue[i];
 
           do {
-            callback = callback(_isSync);
+            callback = callback(_isSync); //syncQueue中的同步任务都在这里被调用
           } while (callback !== null);
         }
       });
@@ -11141,7 +11141,7 @@ var MAGIC_NUMBER_OFFSET = Batched - 1; // 1 unit of expiration time represents 1
 
 function msToExpirationTime(ms) {
   // Always subtract from the offset so that we don't clash with the magic number for NoWork.
-  return MAGIC_NUMBER_OFFSET - (ms / UNIT_SIZE | 0); //一个过期单元是10毫秒，数值越大优先级越大
+  return MAGIC_NUMBER_OFFSET - (ms / UNIT_SIZE | 0); //一个过期单元是10毫秒，数值越小优先级越大
 }
 function expirationTimeToMs(expirationTime) {
   return (MAGIC_NUMBER_OFFSET - expirationTime) * UNIT_SIZE;
@@ -11193,7 +11193,7 @@ function inferPriorityFromExpirationTime(currentTime, expirationTime) {
 
   var msUntil = expirationTimeToMs(expirationTime) - expirationTimeToMs(currentTime);
 
-  if (msUntil <= 0) {
+  if (msUntil <= 0) {//表示已过期
     return ImmediatePriority;
   }
 
@@ -12208,7 +12208,7 @@ function enqueueUpdate(fiber, update) {
     pending.next = update;
   }
 
-  sharedQueue.pending = update; //fiber.updateQueue.shared.pending = update,将update加入到原本的更新队列中
+  sharedQueue.pending = update; //fiber.updateQueue.shared.pending = update,将update加入到原本的更新队列中，多个更新的内容会以单向链表的形式放到sharedQueue.pending
 
   {
     if (currentlyProcessingQueue === sharedQueue && !didWarnUpdateInsideUpdate) {
@@ -12239,7 +12239,7 @@ function enqueueCapturedUpdate(workInProgress, update) {
     last.next = update;
   }
 }
-
+//workInProgress, queue, update, newState, props, instance
 function getStateFromUpdate(workInProgress, queue, update, prevState, nextProps, instance) {
   switch (update.tag) {
     case ReplaceState:
@@ -12280,7 +12280,7 @@ function getStateFromUpdate(workInProgress, queue, update, prevState, nextProps,
         var _payload = update.payload;
         var partialState;
 
-        if (typeof _payload === 'function') {
+        if (typeof _payload === 'function') { //如果是函数，则执行函数，得到新的state对象
           // Updater function
           {
             enterDisallowedContextReadInDEV();
@@ -12344,7 +12344,7 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
       pendingQueue.next = baseFirst;
     }
 
-    baseQueue = pendingQueue;
+    baseQueue = pendingQueue; //这里将pendingQueue放到baseQueue中，然后重置queue.shared.pending。为啥要这样做??
     queue.shared.pending = null; // TODO: Pass `current` as argument
 
     var current = workInProgress.alternate;
@@ -12353,16 +12353,16 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
       var currentQueue = current.updateQueue;
 
       if (currentQueue !== null) {
-        currentQueue.baseQueue = pendingQueue;
+        currentQueue.baseQueue = pendingQueue; //将当前的最新的pendingQueue也放一份到current树，这又为啥要这么做？？
       }
     }
   } // These values may change as we process the queue.
 
 
   if (baseQueue !== null) {
-    var first = baseQueue.next; // Iterate through the list of updates to compute the result.
+    var first = baseQueue.next; // Iterate through the list of updates to compute the result.这是一个循环指针，当前的baseQueue是最后一个被添加进来的update，其next就是第一个
 
-    var newState = queue.baseState;
+    var newState = queue.baseState; //这个是当前的已渲染的state，会在updatQueue进行合并时被当作prevState
     var newExpirationTime = NoWork;
     var newBaseState = null;
     var newBaseQueueFirst = null;
@@ -12374,7 +12374,7 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
       do {
         var updateExpirationTime = update.expirationTime;
 
-        if (updateExpirationTime < renderExpirationTime) {
+        if (updateExpirationTime < renderExpirationTime) {//当前的updator优先级高于render的优先级，也就是这个updator要被执行。否则继续放在更新队列，等待执行
           // Priority is insufficient. Skip this update. If this is the first
           // skipped update, the previous update/state is the new base
           // update/state.
@@ -12438,7 +12438,7 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
 
         update = update.next;
 
-        if (update === null || update === first) {//??表示更新队列中只剩一个待更新的状态对象
+        if (update === null || update === first) {//update.next再次指向first，表明该循环链表已遍历完成
           pendingQueue = queue.shared.pending;
 
           if (pendingQueue === null) {
@@ -12461,7 +12461,7 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
       newBaseQueueLast.next = newBaseQueueFirst;
     }
 
-    queue.baseState = newBaseState;
+    queue.baseState = newBaseState; //将baseState置为最新的state
     queue.baseQueue = newBaseQueueLast; // Set the remaining expiration time to be whatever is remaining in the queue.
     // This should be fine because the only two other things that contribute to
     // expiration time are props and context. We're already in the middle of the
@@ -12471,7 +12471,7 @@ function processUpdateQueue(workInProgress, props, instance, renderExpirationTim
     // that regardless.
 
     markUnprocessedUpdateTime(newExpirationTime);
-    workInProgress.expirationTime = newExpirationTime;
+    workInProgress.expirationTime = newExpirationTime; //该节点的updateQueue已更新完成，重置成新的expirationTime
     workInProgress.memoizedState = newState;//将这个state记录下来
   }
 
@@ -12589,9 +12589,9 @@ var didWarnAboutInvalidateContextType;
   });
   Object.freeze(fakeInternalInstance);
 }
-
+//workInProgress, ctor, getDerivedStateFromProps, newProps
 function applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromProps, nextProps) {
-  var prevState = workInProgress.memoizedState;
+  var prevState = workInProgress.memoizedState; //这其实是最新要进行渲染的state
 
   {
     if ( workInProgress.mode & StrictMode) {
@@ -12600,7 +12600,7 @@ function applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromPro
     }
   }
 
-  var partialState = getDerivedStateFromProps(nextProps, prevState);
+  var partialState = getDerivedStateFromProps(nextProps, prevState); //将最新的props和最新的state传递过去
 
   {
     warnOnUndefinedDerivedState(ctor, partialState);
@@ -12620,11 +12620,11 @@ function applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromPro
 var classComponentUpdater = {
   isMounted: isMounted,
   enqueueSetState: function (inst, payload, callback) {
-    var fiber = get(inst);
+    var fiber = get(inst); //从类实例的_reactInternalFiber属性（key._reactInternalFiber）中去到对应的节点fiber对象
     var currentTime = requestCurrentTimeForUpdate();
     var suspenseConfig = requestCurrentSuspenseConfig();
-    var expirationTime = computeExpirationForFiber(currentTime, fiber, suspenseConfig);
-    var update = createUpdate(expirationTime, suspenseConfig);
+    var expirationTime = computeExpirationForFiber(currentTime, fiber, suspenseConfig); //非BlockingMode，都返回Sync，在setState一开始的时候，就决定了expirationTime是怎样的值
+    var update = createUpdate(expirationTime, suspenseConfig); //创建一个setState对应的更新
     update.payload = payload;
 
     if (callback !== undefined && callback !== null) {
@@ -12635,7 +12635,7 @@ var classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
+    enqueueUpdate(fiber, update); //将当前的setState对应的update，加入到对应fiber的updateQueue
     scheduleWork(fiber, expirationTime);
   },
   enqueueReplaceState: function (inst, payload, callback) {
@@ -12703,7 +12703,7 @@ function checkShouldComponentUpdate(workInProgress, ctor, oldProps, newProps, ol
     return shouldUpdate;
   }
 
-  if (ctor.prototype && ctor.prototype.isPureReactComponent) {
+  if (ctor.prototype && ctor.prototype.isPureReactComponent) {//当类组件继承的是PureComponent，则在这里要对新旧props和state进行浅比较
     return !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState);
   }
 
@@ -13152,9 +13152,9 @@ function resumeMountClassInstance(workInProgress, ctor, newProps, renderExpirati
 
 function updateClassInstance(current, workInProgress, ctor, newProps, renderExpirationTime) {
   var instance = workInProgress.stateNode;
-  cloneUpdateQueue(current, workInProgress);
+  cloneUpdateQueue(current, workInProgress);//让current.updateQueue;和workInProgress.updateQueue不指向同一个updateQueue。目的是啥？？
   var oldProps = workInProgress.memoizedProps;
-  instance.props = workInProgress.type === workInProgress.elementType ? oldProps : resolveDefaultProps(workInProgress.type, oldProps);
+  instance.props = workInProgress.type === workInProgress.elementType ? oldProps : resolveDefaultProps(workInProgress.type, oldProps);//属性的新旧对比，然后补充一些新的属性
   var oldContext = instance.context;
   var contextType = ctor.contextType;
   var nextContext = emptyContextObject;
@@ -13174,7 +13174,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
   // Unsafe lifecycles should not be invoked for components using the new APIs.
 
   if (!hasNewLifecycles && (typeof instance.UNSAFE_componentWillReceiveProps === 'function' || typeof instance.componentWillReceiveProps === 'function')) {
-    if (oldProps !== newProps || oldContext !== nextContext) {
+    if (oldProps !== newProps || oldContext !== nextContext) {//这只是单纯地做了一个浅比较
       callComponentWillReceiveProps(workInProgress, instance, newProps, nextContext);
     }
   }
@@ -13182,7 +13182,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
   resetHasForceUpdateBeforeProcessing();
   var oldState = workInProgress.memoizedState;
   var newState = instance.state = oldState;
-  processUpdateQueue(workInProgress, newProps, instance, renderExpirationTime);
+  processUpdateQueue(workInProgress, newProps, instance, renderExpirationTime);//进入到处理更新队列的阶段，处理完之后workInProgress的memoizedState和updateQueue的baseState已经存放着最终要更新的state，updateQueue的pending被置为null
   newState = workInProgress.memoizedState;
 
   if (oldProps === newProps && oldState === newState && !hasContextChanged() && !checkHasForceUpdateAfterProcessing()) {
@@ -13203,7 +13203,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
     return false;
   }
 
-  if (typeof getDerivedStateFromProps === 'function') {
+  if (typeof getDerivedStateFromProps === 'function') {//执行getDerivedStateFromProps
     applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromProps, newProps);
     newState = workInProgress.memoizedState;
   }
@@ -13227,7 +13227,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
       stopPhaseTimer();
     }
 
-    if (typeof instance.componentDidUpdate === 'function') {
+    if (typeof instance.componentDidUpdate === 'function') {//如果有componentDidUpdate方法，要给effectTag加上Update标识
       workInProgress.effectTag |= Update;
     }
 
@@ -13248,7 +13248,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
         workInProgress.effectTag |= Snapshot;
       }
     } // If shouldComponentUpdate returned false, we should still update the
-    // memoized props/state to indicate that this work can be reused.
+    // memoized props/state to indicate that this work can be reused.表明这些数据是可以再次被利用的
 
 
     workInProgress.memoizedProps = newProps;
@@ -13256,7 +13256,7 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderExpi
   } // Update the existing instance's state, props, and context pointers even
   // if shouldComponentUpdate returns false.
 
-
+  //在类组件中通过this.props,this.state,this.context即可取到这些新属性值
   instance.props = newProps;
   instance.state = newState;
   instance.context = nextContext;
@@ -13470,7 +13470,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     var childToDelete = currentFirstChild;
 
     while (childToDelete !== null) {
-      deleteChild(returnFiber, childToDelete);
+      deleteChild(returnFiber, childToDelete);//给节点打上删除标志，并更新父节点的effectList
       childToDelete = childToDelete.sibling;
     }
 
@@ -13519,7 +13519,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (current !== null) {
       var oldIndex = current.index;
 
-      if (oldIndex < lastPlacedIndex) {
+      if (oldIndex < lastPlacedIndex) {//这是啥意思？
         // This is a move.
         newFiber.effectTag = Placement;
         return lastPlacedIndex;
@@ -13672,7 +13672,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         return null;
       }
 
-      return updateTextNode(returnFiber, oldFiber, '' + newChild, expirationTime);
+      return updateTextNode(returnFiber, oldFiber, '' + newChild, expirationTime);//创建新的workInprogress，将文本元素的fiber对象的pendingProps更新为新的内容，及此处的newChild，'' + newChild的意思是将数字转换为字符串
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -13841,8 +13841,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     var nextOldFiber = null;
 
     for (; oldFiber !== null && newIdx < newChildren.length; newIdx++) {
-      if (oldFiber.index > newIdx) {
-        nextOldFiber = oldFiber;
+      if (oldFiber.index > newIdx) {//代表当前这个节点是一个新节点？？
+        nextOldFiber = oldFiber; 
         oldFiber = null;
       } else {
         nextOldFiber = oldFiber.sibling;
@@ -13880,7 +13880,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         // I.e. if we had null values before, then we want to defer this
         // for each null value. However, we also don't want to call updateSlot
         // with the previous one.
-        previousNewFiber.sibling = newFiber;
+        previousNewFiber.sibling = newFiber; //建立兄弟节点关系
       }
 
       previousNewFiber = newFiber;
@@ -13889,8 +13889,8 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
-      deleteRemainingChildren(returnFiber, oldFiber);
-      return resultingFirstChild;
+      deleteRemainingChildren(returnFiber, oldFiber);//把上一次渲染的子节点，而当前这次又没有的剩余节点给删除掉
+      return resultingFirstChild;//将调和出来的新的节点数组的第一个节点给return出去，当做下一个performUnitOfWork的节点
     }
 
     if (oldFiber === null) {
@@ -14167,7 +14167,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key) {//key是一样的则更新节点，否则删除节点
         switch (child.tag) {
           case Fragment:
             {
@@ -14196,9 +14196,9 @@ function ChildReconciler(shouldTrackSideEffects) {
             {
               if (child.elementType === element.type || ( // Keep this check inline so it only runs on the false path:
                isCompatibleFamilyForHotReloading(child, element) )) {
-                deleteRemainingChildren(returnFiber, child.sibling);
-
-                var _existing3 = useFiber(child, element.props);
+                deleteRemainingChildren(returnFiber, child.sibling);//???为啥要删除其余的兄弟节点
+                //到这里child还是上上次的workInProgress??
+                var _existing3 = useFiber(child, element.props);//得到当前最新的fiber tree
 
                 _existing3.ref = coerceRef(returnFiber, child, element);
                 _existing3.return = returnFiber;
@@ -14219,7 +14219,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         deleteRemainingChildren(returnFiber, child);
         break;
       } else {
-        deleteChild(returnFiber, child);
+        deleteChild(returnFiber, child);//将删除的节点记录到effect链上
       }
 
       child = child.sibling;
@@ -14280,7 +14280,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // We treat the ambiguous cases above the same.
     var isUnkeyedTopLevelFragment = typeof newChild === 'object' && newChild !== null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null;
 
-    if (isUnkeyedTopLevelFragment) {
+    if (isUnkeyedTopLevelFragment) {//如果是一个fragment标签，则直接取其子节点
       newChild = newChild.props.children;
     } // Handle object types
 
@@ -14364,20 +14364,20 @@ var mountChildFibers = ChildReconciler(false);
 function cloneChildFibers(current, workInProgress) {
   if (!(current === null || workInProgress.child === current.child)) {
     {
-      throw Error( "Resuming work not yet implemented." );
+      throw Error( "Resuming work not yet implemented." );//恢复尚未实施的工作
     }
   }
 
-  if (workInProgress.child === null) {
+  if (workInProgress.child === null) { //没有子节点则直接返回
     return;
   }
 
   var currentChild = workInProgress.child;
-  var newChild = createWorkInProgress(currentChild, currentChild.pendingProps);
+  var newChild = createWorkInProgress(currentChild, currentChild.pendingProps);//创建该节点对应的WorkInProgress
   workInProgress.child = newChild;
   newChild.return = workInProgress;
 
-  while (currentChild.sibling !== null) {
+  while (currentChild.sibling !== null) {//给当前节点的兄弟节点创建WorkInProgress
     currentChild = currentChild.sibling;
     newChild = newChild.sibling = createWorkInProgress(currentChild, currentChild.pendingProps);
     newChild.return = workInProgress;
@@ -16766,7 +16766,7 @@ function reconcileChildren(current, workInProgress, nextChildren, renderExpirati
     // the clone algorithm to create a copy of all the current children.
     // If we had any progressed work already, that is invalid at this point so
     // let's throw it out.
-    workInProgress.child = reconcileChildFibers(workInProgress, current.child, nextChildren, renderExpirationTime);
+    workInProgress.child = reconcileChildFibers(workInProgress, current.child, nextChildren, renderExpirationTime);//nextChildren是一个VDOM，通过current.child与nextChildren，借助createWorkInProgress，创建了当前子节点的fiber
   }
 }
 
@@ -17182,7 +17182,7 @@ function finishClassComponent(current, workInProgress, Component, shouldUpdate, 
   // TODO: Restructure so we never read values from the instance.
 
 
-  workInProgress.memoizedState = instance.state; // The context might have changed so we need to recalculate it.
+  workInProgress.memoizedState = instance.state; // The context might have changed so we need to recalculate it.记录当前最新的state
 
   if (hasContext) {
     invalidateContextProvider(workInProgress, Component, true);
@@ -17273,15 +17273,15 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   var nextProps = workInProgress.pendingProps;
   var prevProps = current !== null ? current.memoizedProps : null;
   var nextChildren = nextProps.children;
-  var isDirectTextChild = shouldSetTextContent(type, nextProps);
+  var isDirectTextChild = shouldSetTextContent(type, nextProps);//判断是否是一些子节点只能是文本的节点
 
-  if (isDirectTextChild) {
+  if (isDirectTextChild) {//如果是一些子节点只能为文本的节点，则nextChildren直接返回null
     // We special case a direct text child of a host node. This is a common
     // case. We won't handle it as a reified child. We will instead handle
     // this in the host environment that also has access to this prop. That
     // avoids allocating another HostText fiber and traversing it.
     nextChildren = null;
-  } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
+  } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {//上一次更新时，这个节点的子节点是一个文本节点，则给effectTag打一个重置内容的标志
     // If we're switching from a direct text child to a normal child, or to
     // empty, we need to schedule the text content to be reset.
     workInProgress.effectTag |= ContentReset;
@@ -18337,7 +18337,7 @@ function bailoutOnAlreadyFinishedWork(current, workInProgress, renderExpirationT
 
   var childExpirationTime = workInProgress.childExpirationTime;
 
-  if (childExpirationTime < renderExpirationTime) {
+  if (childExpirationTime < renderExpirationTime) {//表示子节点也没有任何更新
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
@@ -18345,7 +18345,7 @@ function bailoutOnAlreadyFinishedWork(current, workInProgress, renderExpirationT
   } else {
     // This fiber doesn't have work, but its subtree does. Clone the child
     // fibers and continue.
-    cloneChildFibers(current, workInProgress);
+    cloneChildFibers(current, workInProgress); //子节点有更新，先将上上次更新的fiber复制一份作为当前这次的workInProgress
     return workInProgress.child;
   }
 }
@@ -18418,15 +18418,15 @@ function beginWork(current, workInProgress, renderExpirationTime) {
   }
 
   if (current !== null) {//current和workInProgress分别代表当前已经存在的fiber和正在计算中的fiber
-    var oldProps = current.memoizedProps;
-    var newProps = workInProgress.pendingProps;
+    var oldProps = current.memoizedProps;//当前已渲染的节点的属性
+    var newProps = workInProgress.pendingProps; //准备进行更新的节点属性
 
-    if (oldProps !== newProps || hasContextChanged() || ( // Force a re-render if the implementation changed due to hot reload:
+    if (oldProps !== newProps || hasContextChanged() || ( // Force a re-render if the implementation changed due to hot reload: 只要oldProps和newProps不指向同一个对象，都不会相等
      workInProgress.type !== current.type )) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
-      didReceiveUpdate = true; //属性和节点类型都不一样了，要进行更新
-    } else if (updateExpirationTime < renderExpirationTime) { //
+      didReceiveUpdate = true; //属性或节点类型不一样了，要进行更新
+    } else if (updateExpirationTime < renderExpirationTime) { //这次更新的优先级还没有上次更新的优先级高，代表本次无需更新？？
       didReceiveUpdate = false; // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
       // in this optimized path, mostly pushing stuff onto the stack.
@@ -18571,7 +18571,7 @@ function beginWork(current, workInProgress, renderExpirationTime) {
           }
       }
 
-      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderExpirationTime);
+      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderExpirationTime); //当前节点没有更新，继续看看子节点有没有更新
     } else {
       // An update was scheduled on this fiber, but there are no new props
       // nor legacy context. Set this to false. If an update queue or context
@@ -18588,7 +18588,7 @@ function beginWork(current, workInProgress, renderExpirationTime) {
   // move this assignment out of the common path and into each branch.
 
 
-  workInProgress.expirationTime = NoWork; //表示不需要更新，这里主要是为了将去重置回初始值
+  workInProgress.expirationTime = NoWork; //将其重置回初始值
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:
@@ -18627,7 +18627,7 @@ function beginWork(current, workInProgress, renderExpirationTime) {
       return updateHostComponent(current, workInProgress, renderExpirationTime);
 
     case HostText:
-      return updateHostText(current, workInProgress);
+      return updateHostText(current, workInProgress); //对于文本节点，没啥东西需要处理
 
     case SuspenseComponent:
       return updateSuspenseComponent(current, workInProgress, renderExpirationTime);
@@ -19794,7 +19794,7 @@ function commitLifeCycles(finishedRoot, current, finishedWork, committedExpirati
         var instance = finishedWork.stateNode;
 
         if (finishedWork.effectTag & Update) {
-          if (current === null) {
+          if (current === null) {//决定了以下逻辑只能被执行一次，也即代表了componentDidMount只会被执行一次
             startPhaseTimer(finishedWork, 'componentDidMount'); // We could update instance props and state here,
             // but instead we rely on them being set during last render.
             // TODO: revisit this when we implement resuming.
@@ -19813,7 +19813,7 @@ function commitLifeCycles(finishedRoot, current, finishedWork, committedExpirati
 
             instance.componentDidMount();
             stopPhaseTimer();
-          } else {
+          } else {//没此更新都会进入以下条件体，也即componentDidUpdate这个生命周期每次有update都会被调用
             var prevProps = finishedWork.elementType === finishedWork.type ? current.memoizedProps : resolveDefaultProps(finishedWork.type, current.memoizedProps);
             var prevState = current.memoizedState;
             startPhaseTimer(finishedWork, 'componentDidUpdate'); // We could update instance props and state here,
@@ -19836,8 +19836,8 @@ function commitLifeCycles(finishedRoot, current, finishedWork, committedExpirati
             stopPhaseTimer();
           }
         }
-
-        var updateQueue = finishedWork.updateQueue;
+        //以上componentDidMount或componentDidUpdate调用后，再查看updateQueue还有没内容，有内容再继续进入下一阶段的更新
+        var updateQueue = finishedWork.updateQueue; //updateQueue的effect是用来存放带callback的setState ？？
 
         if (updateQueue !== null) {
           {
@@ -19855,7 +19855,7 @@ function commitLifeCycles(finishedRoot, current, finishedWork, committedExpirati
           // TODO: revisit this when we implement resuming.
 
 
-          commitUpdateQueue(finishedWork, updateQueue, instance);
+          commitUpdateQueue(finishedWork, updateQueue, instance);//处理一些updateQueue上的effect，如：带callback的setState
         }
 
         return;
@@ -20504,7 +20504,7 @@ function commitDeletion(finishedRoot, current, renderPriorityLevel) {
 }
 
 function commitWork(current, finishedWork) {
-
+  //current当前的，finishedWork正在进行commit的
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -20542,7 +20542,7 @@ function commitWork(current, finishedWork) {
           var updatePayload = finishedWork.updateQueue;
           finishedWork.updateQueue = null;
 
-          if (updatePayload !== null) {
+          if (updatePayload !== null) { //这个很关键，只要updatePayload没值就不进行更新,updatePayload是放着该host节点的子节点，只要子节点没变化，就不进行更新。也可能也会放着节点的属性，要继续考证
             commitUpdate(instance, updatePayload, type, oldProps, newProps);
           }
         }
@@ -21073,7 +21073,7 @@ var spawnedWorkDuringRender = null; // Expiration times are computed by adding t
 
 var currentEventTime = NoWork;
 function requestCurrentTimeForUpdate() {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {//若当前不处于render和commit阶段
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {//处于render或commit阶段
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
   } // We're not inside React, so we may be in the middle of a browser event.
@@ -21098,7 +21098,7 @@ function computeExpirationForFiber(currentTime, fiber, suspenseConfig) {
     return Sync;
   }
 
-  var priorityLevel = getCurrentPriorityLevel(); //如果不是一个阻塞模式和异步模式，则取该更新的优先级
+  var priorityLevel = getCurrentPriorityLevel(); //如果是一个阻塞模式和异步模式，则取该更新的优先级
 
   if ((mode & ConcurrentMode) === NoMode) { //
     return priorityLevel === ImmediatePriority ? Sync : Batched;
@@ -21176,10 +21176,10 @@ function scheduleUpdateOnFiber(fiber, expirationTime) {
 
   var priorityLevel = getCurrentPriorityLevel(); //初始化时为3
 
-  if (expirationTime === Sync) { //除此渲染
+  if (expirationTime === Sync) { //同步渲染
     if ( // Check if we're inside unbatchedUpdates，检查是否处于不批量更新中
-    (executionContext & LegacyUnbatchedContext) !== NoContext && // Check if we're not already rendering
-    (executionContext & (RenderContext | CommitContext)) === NoContext) { 
+    (executionContext & LegacyUnbatchedContext) !== NoContext && // Check if we're not already rendering检查我们是否还没有渲染
+    (executionContext & (RenderContext | CommitContext)) === NoContext) { //条件判断的意思是，既不是批量更新，也还没开始渲染，则走改条件体
       // Register pending interactions on the root to avoid losing traced interaction data.
       schedulePendingInteractions(root, expirationTime); // This is a legacy edge case. The initial mount of a ReactDOM.render-ed，不是批量更新的话，则进行此操作
       // root inside of batchedUpdates should be synchronous, but layout updates
@@ -21187,7 +21187,7 @@ function scheduleUpdateOnFiber(fiber, expirationTime) {
 
       performSyncWorkOnRoot(root);
     } else {
-      ensureRootIsScheduled(root);
+      ensureRootIsScheduled(root);//就是将对应的携带了当前root的performSyncWorkOnRoot加入到syncQueue队列中
       schedulePendingInteractions(root, expirationTime);
 
       if (executionContext === NoContext) {
@@ -21226,7 +21226,7 @@ var scheduleWork = scheduleUpdateOnFiber; // This is split into a separate funct
 // on a fiber.
 
 function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
-  // Update the source fiber's expiration time，更新该节点的过期时间，若原本的过期时间小于当前的过期时间，则将其设为当前过期时间，目的是降低该更新的优先级？？
+  // Update the source fiber's expiration time，更新该节点的过期时间，若原本的过期时间小于当前的过期时间，则将其设为当前过期时间，目的是降低该更新的优先级
   if (fiber.expirationTime < expirationTime) {
     fiber.expirationTime = expirationTime;
   }
@@ -21267,7 +21267,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   }
 
   if (root !== null) {
-    if (workInProgressRoot === root) { //初始化渲染workInProgressRoot为null
+    if (workInProgressRoot === root) { //新的一次更新开始时workInProgressRoot为null
       // Received an update to a tree that's in the middle of rendering. Mark
       // that's unprocessed work on this root.
       markUnprocessedUpdateTime(expirationTime);
@@ -21313,7 +21313,7 @@ function getNextRootExpirationTimeToWorkOn(root) {
 
   if (!isRootSuspendedAtTime(root, firstPendingTime)) {
     // The highest priority pending time is not suspended. Let's work on that.
-    return firstPendingTime;
+    return firstPendingTime;//最高优先级的挂起时间，并不意味着暂停，所以就找到最高优先级的挂起时间，然后进入工作阶段
   } // If the first pending time is suspended, check if there's a lower priority
   // pending level that we know about. Or check if we received a ping. Work
   // on whichever is higher priority.
@@ -21337,9 +21337,9 @@ function getNextRootExpirationTimeToWorkOn(root) {
 
 
 function ensureRootIsScheduled(root) {
-  var lastExpiredTime = root.lastExpiredTime;
+  var lastExpiredTime = root.lastExpiredTime; //lastExpiredTime表示最近的到期时间
 
-  if (lastExpiredTime !== NoWork) {
+  if (lastExpiredTime !== NoWork) { //表示当前更新已过期，需进行同步更新
     // Special case: Expired work should flush synchronously.
     root.callbackExpirationTime = Sync;
     root.callbackPriority = ImmediatePriority;
@@ -21363,9 +21363,9 @@ function ensureRootIsScheduled(root) {
   // time as an argument.
 
 
-  var currentTime = requestCurrentTimeForUpdate();
+  var currentTime = requestCurrentTimeForUpdate(); //获取当前更新的起始时间
   var priorityLevel = inferPriorityFromExpirationTime(currentTime, expirationTime); // If there's an existing render task, confirm it has the correct priority and
-  // expiration time. Otherwise, we'll cancel it and schedule a new one.
+  // expiration time. Otherwise, we'll cancel it and schedule a new one.根据当前时间和过期时间得到该更新的优先级
 
   if (existingCallbackNode !== null) {
     var existingCallbackPriority = root.callbackPriority;
@@ -21388,9 +21388,9 @@ function ensureRootIsScheduled(root) {
   root.callbackPriority = priorityLevel;
   var callbackNode;
 
-  if (expirationTime === Sync) {
-    // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+  if (expirationTime === Sync) {//是一个同步的更新，所以进入同步的更新调度
+    // Sync React callbacks are scheduled on a special internal queue同步的回调被安排在一个特殊的内部队列上，即syncQueue
+    callbackNode = scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));//携带当前root的callback
   } else {
     callbackNode = scheduleCallback(priorityLevel, performConcurrentWorkOnRoot.bind(null, root), // Compute a task timeout based on the expiration time. This also affects
     // ordering because tasks are processed in timeout order.
@@ -21738,7 +21738,7 @@ function performSyncWorkOnRoot(root) {
   // and prepare a fresh one. Otherwise we'll continue where we left off.
 
   if (root !== workInProgressRoot || expirationTime !== renderExpirationTime$1) {
-    prepareFreshStack(root, expirationTime);//创建了workInProgress，建立了与current的相互指向关联关系，在进入任务调度之前，建立一个当前要更新的节点的workInProgress
+    prepareFreshStack(root, expirationTime);//初次渲染时创建了workInProgress，建立了与current的相互指向关联关系，在进入任务调度之前，建立一个当前要更新的节点的workInProgress,二次渲染时先将上上次更新的fiber拿过来，作为本次更新的fiber。复用一些属性值，提高效率
     startWorkOnPendingInteractions(root, expirationTime);
   } // If we have a work-in-progress fiber, it means there's still work to do
   // in this root.
@@ -21746,14 +21746,14 @@ function performSyncWorkOnRoot(root) {
 
   if (workInProgress !== null) {
     var prevExecutionContext = executionContext;
-    executionContext |= RenderContext;
+    executionContext |= RenderContext; //此处标志着render阶段的开始
     var prevDispatcher = pushDispatcher();
     var prevInteractions = pushInteractions(root);
     startWorkLoopTimer(workInProgress);
 
     do {
       try {
-        workLoopSync();//同步任务执行
+        workLoopSync();//同步任务执行，创建了workInProgress后就开始进入任务的执行阶段，即render阶段
         break;
       } catch (thrownValue) {
         handleError(root, thrownValue);
@@ -21946,7 +21946,7 @@ function prepareFreshStack(root, expirationTime) {
     cancelTimeout(timeoutHandle);
   }
 
-  if (workInProgress !== null) {
+  if (workInProgress !== null) { //如果workInProgress不为null，代表上次更新被中断了，需要通过unwindInterruptedWork把该任务已更新的那些节点给还原回来
     var interruptedWork = workInProgress.return;
 
     while (interruptedWork !== null) {
@@ -21956,7 +21956,7 @@ function prepareFreshStack(root, expirationTime) {
   }
 
   workInProgressRoot = root; //将当前的根节点fiberRoot，赋值给workInProgressRoot
-  workInProgress = createWorkInProgress(root.current, null); //并将rootFiber对象赋值给workInProgress，这一步建立了workInProgress和current的alternate指针，建立了关联关系
+  workInProgress = createWorkInProgress(root.current, null); //并将rootFiber对象赋值给workInProgress，在初次渲染时这一步建立了workInProgress和current的alternate指针，建立了关联关系，二次渲染时先将上上次更新的fiber拿过来，作为本次更新的fiber。复用一些属性值，提高效率
   renderExpirationTime$1 = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
@@ -22158,7 +22158,7 @@ function performUnitOfWork(unitOfWork) {
   }
 
   resetCurrentFiber();
-  unitOfWork.memoizedProps = unitOfWork.pendingProps;//将新的任务的属性记录起来
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;//将新的节点的属性记录起来，进入
 
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
@@ -22208,7 +22208,7 @@ function completeUnitOfWork(unitOfWork) {
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
         // side-effect order.
-        if (returnFiber.firstEffect === null) {
+        if (returnFiber.firstEffect === null) {//当某个节点已经更新完成，则要重新计算该节点的父节点的effect list
           returnFiber.firstEffect = workInProgress.firstEffect;
         }
 
@@ -22230,7 +22230,7 @@ function completeUnitOfWork(unitOfWork) {
         // list. PerformedWork effect is read by React DevTools but shouldn't be
         // committed.
 
-        if (effectTag > PerformedWork) {
+        if (effectTag > PerformedWork) { //如果该节点本身也有更新的话，也要将该节点添加到父节点的effect list
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = workInProgress;
           } else {
@@ -22287,7 +22287,7 @@ function completeUnitOfWork(unitOfWork) {
 
     if (siblingFiber !== null) {
       // If there is more work to do in this returnFiber, do that next.
-      return siblingFiber;
+      return siblingFiber; //如果该节点有下一个兄弟节点，则返回下一个兄弟节点
     } // Otherwise, return to the parent
 
 
@@ -22378,7 +22378,7 @@ function resetChildExpirationTime(completedWork) {
 
 function commitRoot(root) {
   var renderPriorityLevel = getCurrentPriorityLevel();
-  runWithPriority$1(ImmediatePriority, commitRootImpl.bind(null, root, renderPriorityLevel));
+  runWithPriority$1(ImmediatePriority, commitRootImpl.bind(null, root, renderPriorityLevel));//这里将优先级变为最高
   return null;
 }
 
@@ -22502,11 +22502,11 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 
     startCommitHostEffectsTimer();
-    nextEffect = firstEffect;
+    nextEffect = firstEffect; //进行完第一个循环之后，再把nextEffect重置为firstEffect
 
     do {
       {
-        invokeGuardedCallback(null, commitMutationEffects, null, root, renderPriorityLevel);
+        invokeGuardedCallback(null, commitMutationEffects, null, root, renderPriorityLevel);//这个主要是用来做一些真实dom的更新
 
         if (hasCaughtError()) {
           if (!(nextEffect !== null)) {
@@ -22534,11 +22534,11 @@ function commitRootImpl(root, renderPriorityLevel) {
     // layout, but class component lifecycles also fire here for legacy reasons.
 
     startCommitLifeCyclesTimer();
-    nextEffect = firstEffect;
+    nextEffect = firstEffect; //第二个循环，再次将nextEffect重置为firstEffect
 
     do {
       {
-        invokeGuardedCallback(null, commitLayoutEffects, null, root, expirationTime);
+        invokeGuardedCallback(null, commitLayoutEffects, null, root, expirationTime); //执行一些commit阶段的声明周期方法
 
         if (hasCaughtError()) {
           if (!(nextEffect !== null)) {
@@ -22601,7 +22601,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // clear this in flushPassiveEffects.
     nextEffect = firstEffect;
 
-    while (nextEffect !== null) {
+    while (nextEffect !== null) {//清空effect链
       var nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
       nextEffect = nextNextEffect;
@@ -22706,7 +22706,7 @@ function commitBeforeMutationEffects() {
   }
 }
 
-//提交有变化的一些副作用
+//提交有变化的一些副作用，并进行真实dom的更新
 function commitMutationEffects(root, renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
@@ -22794,19 +22794,19 @@ function commitMutationEffects(root, renderPriorityLevel) {
 
 function commitLayoutEffects(root, committedExpirationTime) {
   // TODO: Should probably move the bulk of this function to commitWork.
-  while (nextEffect !== null) {
+  while (nextEffect !== null) {//遍历effect链，将各个有更新的节点进行调用处理
     setCurrentFiber(nextEffect);
     var effectTag = nextEffect.effectTag;
 
     if (effectTag & (Update | Callback)) {
       recordEffect();
       var current = nextEffect.alternate;
-      commitLifeCycles(root, current, nextEffect);
+      commitLifeCycles(root, current, nextEffect);//执行一些生命周期方法
     }
 
     if (effectTag & Ref) {
       recordEffect();
-      commitAttachRef(nextEffect);
+      commitAttachRef(nextEffect); 
     }
 
     resetCurrentFiber();
@@ -23129,7 +23129,7 @@ function stopInterruptedWorkLoopTimer() {
 }
 
 function checkForInterruption(fiberThatReceivedUpdate, updateExpirationTime) {
-  if ( workInProgressRoot !== null && updateExpirationTime > renderExpirationTime$1) { //初始化是不能中断的
+  if ( workInProgressRoot !== null && updateExpirationTime > renderExpirationTime$1) { //初始化是不能中断的，没中断的话workInProgressRoot应该是null的
     interruptedBy = fiberThatReceivedUpdate;
   }
 }
@@ -23692,15 +23692,15 @@ function resolveLazyComponentTag(Component) {
 } // This is used to create an alternate fiber to do work on.
 
 function createWorkInProgress(current, pendingProps) {
-  var workInProgress = current.alternate;
+  var workInProgress = current.alternate; //先将上上次更新的fiber拿过来，作为本次更新的fiber。复用一些属性值，提高效率
 
-  if (workInProgress === null) {
+  if (workInProgress === null) {//代表该节点是初次被渲染的
     // We use a double buffering pooling technique because we know that we'll
     // only ever need at most two versions of a tree. We pool the "other" unused
     // node that we're free to reuse. This is lazily created to avoid allocating
     // extra objects for things that are never updated. It also allow us to
     // reclaim the extra memory if needed.
-    workInProgress = createFiber(current.tag, pendingProps, current.key, current.mode); //初次渲染，current.alternate为null，创建初始化fiber
+    workInProgress = createFiber(current.tag, pendingProps, current.key, current.mode); //初次渲染，current.alternate为null，创建初始化fiber，第二次渲染，将上一次更新的一些属性作为当前更新的fiber的属性
     workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
@@ -23719,9 +23719,9 @@ function createWorkInProgress(current, pendingProps) {
     workInProgress.alternate = current; //workInProgress.alternate指向current，current.alternate指向workInProgress
     current.alternate = workInProgress;
   } else {
-    workInProgress.pendingProps = pendingProps; // We already have an alternate.
+    workInProgress.pendingProps = pendingProps; // We already have an alternate.上次更新的属性已经放在current树上了，这里直接把workInProgress的pendingProps覆盖为本次的就行
     // Reset the effect tag.
-
+    //重置一些Effect相关的属性
     workInProgress.effectTag = NoEffect; // The effect list is no longer valid.
 
     workInProgress.nextEffect = null;
@@ -23737,7 +23737,7 @@ function createWorkInProgress(current, pendingProps) {
       workInProgress.actualStartTime = -1;
     }
   }
-
+  //复用上一次更新的fiber属性状态
   workInProgress.childExpirationTime = current.childExpirationTime;
   workInProgress.expirationTime = current.expirationTime;
   workInProgress.child = current.child;
@@ -23753,7 +23753,7 @@ function createWorkInProgress(current, pendingProps) {
     responders: currentDependencies.responders
   }; // These will be overridden during the parent's reconciliation
 
-  workInProgress.sibling = current.sibling;
+  workInProgress.sibling = current.sibling;//为啥要复用兄弟节点指针，但又不复用父节点和儿子节点指针
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
 
@@ -24187,11 +24187,11 @@ function markRootSuspendedAtTime(root, expirationTime) {
 function markRootUpdatedAtTime(root, expirationTime) {
   // Update the range of pending times，更新挂起时间的范围
   var firstPendingTime = root.firstPendingTime;
-
+  //更新最近的一次挂起时间
   if (expirationTime > firstPendingTime) {
     root.firstPendingTime = expirationTime;
   } // Update the range of suspended times. Treat everything lower priority or
-  // equal to this update as unsuspended.  提升该更新的优先级
+  // equal to this update as unsuspended.  降低该更新的优先级
 
 
   var firstSuspendedTime = root.firstSuspendedTime;
